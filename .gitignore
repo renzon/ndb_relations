@@ -60,3 +60,13 @@ target/
 
 #Ipython Notebook
 .ipynb_checkpoints
+
+# Pycharm
+.idea/
+
+# virtualenv
+venv/*
+
+# virtualenv but requirements
+!venv/requirements.txt
+!venv/dev_requirements.txt
