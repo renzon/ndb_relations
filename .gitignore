@@ -69,4 +69,3 @@ venv/*
 
 # virtualenv but requirements
 !venv/requirements.txt
-!venv/dev_requirements.txt
