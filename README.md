@@ -77,3 +77,56 @@ Key('Order', 2)
 [Key('OrderItemUserLog', 6), Key('OrderItemUserLog', 5)]
 ```
 
+Some, after entities creation you want retrieve data. Let's say you have Order id and want retrieve it's user and items:
+
+```python
+
+>>> order=ndb.Key(Order,2).get()
+>>> order
+Order(key=Key('Order', 2), user=Key('User', 1))
+>>> order.user_from_db = order.user.get()
+>>> order.user_from_db
+User(key=Key('User', 1), name=u'Renzo')
+>>> order.items = OrderItem.query(OrderItem.order == order.key).fetch()
+>>> order.items
+[OrderItem(key=Key('OrderItem', 3), name=u'Tablet', order=Key('Order', 2), price=12.9), OrderItem(key=Key('OrderItem', 4), name=u'Computer', order=Key('Order', 2), price=22.8)]
+```
+
+This code works fine but it has some drawbacks:
+
+1) You have to write the entire code yourself
+2) It is running serially and could be parallel
+
+To solve 2, you could use async option from ndb itself:
+
+```python
+>>> user_future = order.user.get_async()
+>>> items_future = OrderItem.query(OrderItem.order==order.key).fetch_async()
+>>> user_future.get_result()
+User(key=Key('User', 1), name=u'Renzo')
+>>> items_future.get_result()
+[OrderItem(key=Key('OrderItem', 3), name=u'Tablet', order=Key('Order', 2), price=12.9), OrderItem(key=Key('OrderItem', 4), name=u'Computer', order=Key('Order', 2), price=22.8)]
+```
+
+But you would still have to write code and it grows with you want get more connections.
+The boilerp,ate code get worse for n to m relations. Let's retrieve a user's items:
+
+```python
+>>> logs = OrderItemUserLog.query(OrderItemUserLog.user == ndb.Key(User, 1)).fetch()
+>>> logs
+[OrderItemUserLog(key=Key('OrderItemUserLog', 5), item=Key('OrderItem', 4), user=Key('User', 1)), 
+ OrderItemUserLog(key=Key('OrderItemUserLog', 6), item=Key('OrderItem', 3), user=Key('User', 1))]
+>>> item_keys=[lg.item for lg in logs]
+>>> item_keys
+[Key('OrderItem', 4), Key('OrderItem', 3)]
+>>> items = ndb.get_multi(item_keys)
+>>> items
+[OrderItem(key=Key('OrderItem', 4), name=u'Computer', order=Key('Order', 2), price=22.8), 
+ OrderItem(key=Key('OrderItem', 3), name=u'Tablet', order=Key('Order', 2), price=12.9)]
+```
+
+So here you have to manually retrieve item keys from the relationship and retrieve respective entities from DB.
+
+This is too boring for people used to ORM's for SQL Data Bases, like Django's ORM.
+
+
