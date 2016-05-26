@@ -65,7 +65,8 @@ Key('Order', 2)
 
 # Creating Items
 
->>> items = [OrderItem(name='Tablet', price=12.90, order=order.key), OrderItem(name='Computer', price=22.80, order=order.key)]
+>>> items = [OrderItem(name='Tablet', price=12.90, order=order.key),
+...          OrderItem(name='Computer', price=22.80, order=order.key)]
 >>> from google.appengine.ext import ndb
 >>> ndb.put_multi(items)
 [Key('OrderItem', 3), Key('OrderItem', 4)]
