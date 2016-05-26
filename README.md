@@ -35,8 +35,32 @@ class Order(ndb.Model):
 class OrderItemUserLog(ndb.Model):
     item = ndb.KeyProperty(Order)
     user = ndb.KeyProperty(User)
+```
+
+So you can create model and connect them using their keys:
 
 
+```python
 
+# Initializing Testbed to emulate datastore and memcache services
 
+>>> from google.appengine.ext import testbed
+>>> t = testbed.Testbed()
+>>> t.setup_env(app_id='my-app')
+>>> t.activate()
+>>> t.init_datastore_v3_stub()
+>>> t.init_memcache_stub()
+
+# Creating Models 
+
+>>> from tests.example import *
+
+# Creating User
+
+>>> user = User(name='Renzo')
+>>> user.put()
+Key('User', 1)
+>>> order = Order(user=user.key)
+>>> order.put()
+Key('Order', 2)
 ```
