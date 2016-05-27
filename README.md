@@ -127,6 +127,48 @@ The boilerp,ate code get worse for n to m relations. Let's retrieve a user's ite
 
 So here you have to manually retrieve item keys from the relationship and retrieve respective entities from DB.
 
-This is too boring for people used to ORM's for SQL Data Bases, like Django's ORM.
+This is too much code for people used to ORM's on SQL Data Bases, like Django's ORM.
+
+To solve this problem this lib provide a way to make relationships differently.
+
+## Defining a Relationship
+
+Let's define a relationship between order and user:
+
+```python
+from ndb_relations.relations import Relation, OneToManyMixin
+from tests.example_using_relations import Order, User
+
+class OrderOwner(Relation, OneToManyMixin):
+    origin = ndb.KeyProperty(User)
+    destin = ndb.KeyProperty(Order)
+```
+
+So to retrieve the order its ownner:
+
+```python
+# Creating relation
+>>> from example_using_relations import Order, OrderOwner
+>>> OrderOwner(origin=user.key, destin=order.key).put()
+Key('OrderOwner', 2)
+
+# Fetching Order with User
+>>> from google.appengine.ext import ndb
+>>> order_key = ndb.Key(Order, 2)
+>>> from ndb_relations import relations
+>>> relations.fetch(order_key, ('user', OrderOwner))
+Order(key=Key('Order', 7))
+>>> order.user
+User(key=Key('User', 1), name=u'Renzo')
+
+# Fetching User with Orders
+>>> user_key = ndb.Key(User, 1)
+>>> user = relations.fetch(user_key, ('orders', OrderOwner))
+>>> user
+User(key=Key('User', 1), name=u'Renzo')
+>>> user.orders
+[Order(key=Key('Order', 7))]
+``
+
 
 
