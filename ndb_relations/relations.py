@@ -15,18 +15,21 @@ class Relation(PolyModel):
         model_future = key.get_async()
         if args:
             name, query = args[0]
+
             if key.kind() == cls.origin._kind:
                 query.filter(cls.origin == key)
-                origin_keys = [relation.destin for relation in query.fetch()]
-                origin_futures = ndb.get_multi_async(origin_keys)
-                model = model_future.get_result()
-                cls._set_origin_property(model, name, origin_futures)
-            else:
-                query.filter(cls.destin == key)
-                destin_keys = [relation.origin for relation in query.fetch()]
+                destin_keys = [relation.destin for relation in query.fetch()]
                 destin_futures = ndb.get_multi_async(destin_keys)
                 model = model_future.get_result()
-                cls._set_destin_property(model, name, destin_futures)
+                cls._set_origin_property(model, name, destin_futures)
+
+            else:
+                query.filter(cls.destin == key)
+                origin_keys = [relation.origin for relation in query.fetch()]
+                origin_futures = ndb.get_multi_async(origin_keys)
+                model = model_future.get_result()
+                cls._set_destin_property(model, name, origin_futures)
+
             return model
 
         return model_future.get_result()
