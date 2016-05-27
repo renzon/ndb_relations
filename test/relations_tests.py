@@ -14,7 +14,7 @@ class FetchTests(GAETestCase):
         self.user = User(name='Renzo')
         user_key = self.user.put()
         self.orders = [Order(), Order()]
-        order_keys=ndb.put_multi(self.orders)
+        order_keys = ndb.put_multi(self.orders)
 
         ndb.put_multi([OrderOwner(origin=user_key, destin=order_key) for order_key in order_keys])
 
@@ -24,6 +24,6 @@ class FetchTests(GAETestCase):
         self.assertEqual(order.user, self.user)
 
     def test_fetch_orders_with_key(self):
-        order = OrderOwner.fetch(self.orders.key, ('user', OrderOwner.query()))
-        self.assertEqual(order, self.orders)
-        self.assertEqual(order.user, self.user)
+        user = OrderOwner.fetch(self.user.key, ('orders', OrderOwner.query()))
+        self.assertEqual(user, self.user)
+        self.assertEqual(user.orders, self.orders)
