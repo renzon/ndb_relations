@@ -6,21 +6,19 @@ from google.appengine.ext import ndb
 from ndb_relations.relations import OneToMany
 
 
-class User(ndb.Model):
+class User2(ndb.Model):
     name = ndb.StringProperty()
 
 
-class Order(ndb.Model):
+class Order2(ndb.Model):
     pass
 
 
-class OrderItem(ndb.Model):
+class OrderItem2(ndb.Model):
     name = ndb.StringProperty()
     price = ndb.FloatProperty()
 
 
 class OrderOwner(OneToMany):
-    origin = ndb.KeyProperty(User)
-    destin = ndb.KeyProperty(Order)
-
-
+    origin = ndb.KeyProperty(User2)
+    destin = ndb.KeyProperty(Order2)
