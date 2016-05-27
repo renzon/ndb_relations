@@ -1,13 +1,11 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import, unicode_literals
 
-from unittest.case import TestCase
-
-from ndb_relations import relations
-from test.example_using_relations import User
+from test.example_using_relations import User, Order, OrderOwner
+from test.util import GAETestCase
 
 
-class FetchTests(TestCase):
+class FetchTests(GAETestCase):
     def setUp(self):
         super(FetchTests, self).setUp()
 
@@ -19,6 +17,6 @@ class FetchTests(TestCase):
         OrderOwner(origin=user_key, destin=order_key).put()
 
     def test_fetch_user_with_key(self):
-        order = relations.fetch(self.order.key, ('user', OrderOwner))
+        order = OrderOwner.fetch(self.order.key, ('user', OrderOwner.query()))
         self.assertEqual(order, self.order)
         self.assertEqual(order.user, self.user)

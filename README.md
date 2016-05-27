@@ -139,7 +139,7 @@ Let's define a relationship between order and user:
 from ndb_relations.relations import Relation, OneToManyMixin
 from test.example_using_relations import Order, User
 
-class OrderOwner(Relation, OneToManyMixin):
+class OrderOwner(OneToMany):
     origin = ndb.KeyProperty(User)
     destin = ndb.KeyProperty(Order)
 ```
@@ -155,20 +155,19 @@ Key('OrderOwner', 2)
 # Fetching Order with User
 >>> from google.appengine.ext import ndb
 >>> order_key = ndb.Key(Order, 2)
->>> from ndb_relations import relations
->>> relations.fetch(order_key, ('user', OrderOwner.query()))
+>>> OrderOwner.fetch(order_key, ('user', OrderOwner.query()))
 Order(key=Key('Order', 7))
 >>> order.user
 User(key=Key('User', 1), name=u'Renzo')
 
 # Fetching User with Orders
 >>> user_key = ndb.Key(User, 1)
->>> user = relations.fetch(user_key, ('orders', OrderOwner.query()))
+>>> user = OrderOwner.fetch(user_key, ('orders', OrderOwner.query()))
 >>> user
 User(key=Key('User', 1), name=u'Renzo')
 >>> user.orders
 [Order(key=Key('Order', 7))]
-``
+```
 
 
 

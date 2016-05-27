@@ -1,10 +1,9 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import, unicode_literals
 
-
 from google.appengine.ext import ndb
 
-from ndb_relations.relations import Relation, OneToManyMixin
+from ndb_relations.relations import OneToMany
 
 
 class User(ndb.Model):
@@ -20,6 +19,6 @@ class OrderItem(ndb.Model):
     price = ndb.FloatProperty()
 
 
-class OrderOwner(Relation, OneToManyMixin):
+class OrderOwner(OneToMany):
     origin = ndb.KeyProperty(User)
     destin = ndb.KeyProperty(Order)
