@@ -151,7 +151,7 @@ class OrderOwner(OneToMany):
 
 ```
 
-So to fetch the order its ownner:
+So to fetch the order with its owner:
 
 ```python
 
