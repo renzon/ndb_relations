@@ -43,6 +43,10 @@ class Relation(PolyModel):
         setattr(model, name, [f.get_result() for f in futures])
 
 
+class OneToManyViolation(Exception):
+    pass
+
+
 class OneToMany(Relation):
     @classmethod
     def _set_destin_property(cls, model, name, futures):
