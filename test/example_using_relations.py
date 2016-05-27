@@ -22,3 +22,5 @@ class OrderItem(ndb.Model):
 class OrderOwner(OneToMany):
     origin = ndb.KeyProperty(User)
     destin = ndb.KeyProperty(Order)
+
+

@@ -51,3 +51,12 @@ class OneToMany(Relation):
     @classmethod
     def _set_destin_property(cls, model, name, futures):
         setattr(model, name, futures[0].get_result())
+
+    def _pre_put_hook(self):
+        cls=type(self)
+        relation = cls.query(cls.destin == self.destin).get(keys_only=True)
+        if relation is not None:
+            raise OneToManyViolation('{} has alredy a relation'.format(cls.destin))
+
+
+
