@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import, unicode_literals
 
+from google.appengine.ext import ndb
+
 from test.example_using_relations import User, Order, OrderOwner
 from test.util import GAETestCase
 
@@ -11,12 +13,17 @@ class FetchTests(GAETestCase):
 
         self.user = User(name='Renzo')
         user_key = self.user.put()
-        self.order = Order()
-        order_key = self.order.put()
+        self.orders = [Order(), Order()]
+        order_keys=ndb.put_multi(self.orders)
 
-        OrderOwner(origin=user_key, destin=order_key).put()
+        ndb.put_multi([OrderOwner(origin=user_key, destin=order_key) for order_key in order_keys])
 
     def test_fetch_user_with_key(self):
-        order = OrderOwner.fetch(self.order.key, ('user', OrderOwner.query()))
-        self.assertEqual(order, self.order)
+        order = OrderOwner.fetch(self.orders[0].key, ('user', OrderOwner.query()))
+        self.assertEqual(order, self.orders[0])
+        self.assertEqual(order.user, self.user)
+
+    def test_fetch_orders_with_key(self):
+        order = OrderOwner.fetch(self.orders.key, ('user', OrderOwner.query()))
+        self.assertEqual(order, self.orders)
         self.assertEqual(order.user, self.user)
