@@ -223,6 +223,6 @@ Order2(key=Key('Order2', 8))
 >>> order.owner
 User2(key=Key('User2', 7), name=u'Renzo')
 >>> order.items
-[]
+[Item(key=Key('Item', 12), name=u'Notebook'), Item(key=Key('Item', 13), name=u'Notebook')]
 
 ```
