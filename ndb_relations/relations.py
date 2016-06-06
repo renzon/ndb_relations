@@ -11,36 +11,18 @@ class Relation(PolyModel):
     destin = ndb.KeyProperty(required=True)
 
     @classmethod
-    def fetch(cls, key, *args):
-        model_future = key.get_async()
-        if args:
-            name, query = args[0]
-
-            if key.kind() == cls.origin._kind:
-                query.filter(cls.origin == key)
-                destin_keys = [relation.destin for relation in query.fetch()]
-                destin_futures = ndb.get_multi_async(destin_keys)
-                model = model_future.get_result()
-                cls._set_origin_property(model, name, destin_futures)
-
-            else:
-                query.filter(cls.destin == key)
-                origin_keys = [relation.origin for relation in query.fetch()]
-                origin_futures = ndb.get_multi_async(origin_keys)
-                model = model_future.get_result()
-                cls._set_destin_property(model, name, origin_futures)
-
-            return model
-
-        return model_future.get_result()
-
-    @classmethod
     def _set_destin_property(cls, model, name, futures):
         setattr(model, name, [f.get_result() for f in futures])
 
     @classmethod
     def _set_origin_property(cls, model, name, futures):
         setattr(model, name, [f.get_result() for f in futures])
+
+    @classmethod
+    def query(cls, *args, **kwds):
+        q = super(Relation, cls).query(*args, **kwds)
+        q._relation_cls = cls
+        return q
 
 
 class OneToManyViolation(Exception):
@@ -56,4 +38,28 @@ class OneToMany(Relation):
         cls = type(self)
         relation = cls.query(cls.destin == self.destin).get(keys_only=True)
         if relation is not None:
-            raise OneToManyViolation('{} has alredy a relation'.format(cls.destin))
+            raise OneToManyViolation('{} has already a relation'.format(cls.destin))
+
+
+def fetch(key, *args):
+    model_future = key.get_async()
+    if args:
+        name, query = args[0]
+        cls = query._relation_cls
+        if key.kind() == cls.origin._kind:
+            query.filter(cls.origin == key)
+            destin_keys = [relation.destin for relation in query.fetch()]
+            destin_futures = ndb.get_multi_async(destin_keys)
+            model = model_future.get_result()
+            cls._set_origin_property(model, name, destin_futures)
+
+        else:
+            query.filter(cls.destin == key)
+            origin_keys = [relation.origin for relation in query.fetch()]
+            origin_futures = ndb.get_multi_async(origin_keys)
+            model = model_future.get_result()
+            cls._set_destin_property(model, name, origin_futures)
+
+        return model
+
+    return model_future.get_result()

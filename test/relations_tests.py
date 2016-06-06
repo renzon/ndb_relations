@@ -3,7 +3,7 @@ from __future__ import absolute_import, unicode_literals
 
 from google.appengine.ext import ndb
 
-from ndb_relations.relations import OneToManyViolation
+from ndb_relations.relations import OneToManyViolation, fetch
 from test.example_using_relations import User2, Order2, OrderOwner
 from test.util import GAETestCase
 
@@ -20,12 +20,14 @@ class FetchTests(GAETestCase):
         ndb.put_multi([OrderOwner(origin=user_key, destin=order_key) for order_key in order_keys])
 
     def test_fetch_user_with_key(self):
-        order = OrderOwner.fetch(self.orders[0].key, ('user', OrderOwner.query()))
+        q = OrderOwner.query()
+        q.fetch()
+        order = fetch(self.orders[0].key, ('user', OrderOwner.query()))
         self.assertEqual(order, self.orders[0])
         self.assertEqual(order.user, self.user)
 
     def test_fetch_orders_with_key(self):
-        user = OrderOwner.fetch(self.user.key, ('orders', OrderOwner.query()))
+        user = fetch(self.user.key, ('orders', OrderOwner.query()))
         self.assertEqual(user, self.user)
         self.assertItemsEqual(user.orders, self.orders)
 

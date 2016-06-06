@@ -141,7 +141,6 @@ Let's define a relationship between order and user:
 
 ```python
 
-
 from ndb_relations.relations import Relation, OneToManyMixin
 from test.example_using_relations import Order2, User2
 
@@ -163,35 +162,66 @@ So to fetch the order with its owner:
 >>> user.put()
 Key('User2', 7)
 
-# Creating Order
+# Creating Orders
 >>> order = Order2()
 >>> order.put()
 Key('Order2', 8)
+>>> order2 = Order2()
+>>> order2.put()
+Key('Order2', 9)
 
 
-# Creating relation
-
+# Creating relations
 >>> OrderOwner(origin=user.key, destin=order.key).put()
-Key('Relation', 9)
+Key('Relation', 10)
+>>> OrderOwner(origin=user.key, destin=order2.key).put()
+Key('Relation', 11)
+
 
 # Fetching Order with User
+>>> from ndb_relations.relations import fetch
 >>> from google.appengine.ext import ndb
->>> order = OrderOwner.fetch(order.key, ('user', OrderOwner.query()))
+>>> order = fetch(order.key, ('user', OrderOwner.query()))
 >>> order
 Order2(key=Key('Order2', 8))
 >>> order.user
 User2(key=Key('User2', 7), name=u'Renzo')
 
 
-
 # Fetching User with Orders
->>> user = OrderOwner.fetch(user.key, ('orders', OrderOwner.query()))
+>>> user = fetch(user.key, ('orders', OrderOwner.query()))
 >>> user
 User2(key=Key('User2', 7), name=u'Renzo')
 >>> user.orders
-[Order2(key=Key('Order2', 8))]
+[Order2(key=Key('Order2', 8)), Order2(key=Key('Order2', 9))]
 
 ```
 
+More than that, related object can be found in parallel:
+
+```python
+# Creating Models 
+>>> from test.example_using_relations import Item, OrderItemRelation
+ 
+>>> item = Item(name='Notebook') 
+>>> item.put() 
+Key('Item', 12)
+>>> item2 = Item(name='Notebook') 
+>>> item2.put() 
+Key('Item', 13)
+
+# Creating relations
+>>> OrderItemRelation(origin=order.key, destin=item.key).put()
+Key('Relation', 14)
+>>> OrderItemRelation(origin=order.key, destin=item2.key).put()
+Key('Relation', 15)
+
+# Order with User and Items
+>>> order = fetch(user.key, ('orders', OrderOwner.query()))
+>>> user
+User2(key=Key('User2', 7), name=u'Renzo')
+>>> user.orders
+[Order2(key=Key('Order2', 8)), Order2(key=Key('Order2', 9))]
 
 
+```
