@@ -217,11 +217,12 @@ Key('Relation', 14)
 Key('Relation', 15)
 
 # Order with User and Items
->>> order = fetch(user.key, ('orders', OrderOwner.query()))
->>> user
+>>> order = fetch(order.key, ('owner', OrderOwner.query()),('items', OrderItemRelation.query()))
+>>> order
+Order2(key=Key('Order2', 8))
+>>> order.owner
 User2(key=Key('User2', 7), name=u'Renzo')
->>> user.orders
-[Order2(key=Key('Order2', 8)), Order2(key=Key('Order2', 9))]
-
+>>> order.items
+[]
 
 ```
