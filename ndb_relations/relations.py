@@ -45,34 +45,48 @@ class OneToMany(Relation):
             raise OneToManyViolation('{} has already a relation'.format(cls.destin))
 
 
-def fetch(key, *args):
-    if isinstance(key, Model):
-        model = key
-        key = model.key
-    else:
-        model_future = key.get_async()
-        model = None
+class _ModelNone(object):
+    pass
 
+
+class _ModelAsyncFetcher(object):
+    def __init__(self, key_or_model):
+        if isinstance(key_or_model, Model):
+            self._model = key_or_model
+            self.key = key_or_model.key
+        else:
+            self.key = key_or_model
+            self._model_future = key_or_model.get_async()
+            self._model = _ModelNone
+
+    @property
+    def model(self):
+        if self._model is _ModelNone:
+            self._model = self._model_future.get_result()
+        return self._model
+
+
+def fetch(key_or_model, *args):
     partials = []
+    model_fetcher = _ModelAsyncFetcher(key_or_model)
 
     for tpl in args:
         name, query = tpl
         cls = query._relation_cls
-        opposite_prop, prop = _define_property_and_opposite(cls, key)
-        query = query.filter(getattr(cls, prop) == key)
+        opposite_prop, prop = _define_property_and_opposite(cls, model_fetcher.key)
+        query = query.filter(getattr(cls, prop) == model_fetcher.key)
         relation_futures = query.fetch_async()
         opposite_keys = [getattr(relation, opposite_prop) for relation in relation_futures.get_result()]
         opposite_futures = ndb.get_multi_async(opposite_keys)
-        model = model or model_future.get_result()
         method_name = '_set_{}_property'.format(prop)
-        p = partial(getattr(cls, method_name), model, name, opposite_futures)
+        p = partial(getattr(cls, method_name), model_fetcher.model, name, opposite_futures)
 
         partials.append(p)
 
     for p in partials:
         p()
 
-    return model or model_future.get_result()
+    return model_fetcher.model
 
 
 def _define_property_and_opposite(cls, key):
