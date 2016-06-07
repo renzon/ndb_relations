@@ -4,6 +4,7 @@ from __future__ import absolute_import, unicode_literals
 from functools import partial
 
 from google.appengine.ext import ndb
+from google.appengine.ext.ndb.model import Model
 from google.appengine.ext.ndb.polymodel import PolyModel
 
 
@@ -45,8 +46,13 @@ class OneToMany(Relation):
 
 
 def fetch(key, *args):
-    model_future = key.get_async()
-    model = None
+    if isinstance(key, Model):
+        model = key
+        key = model.key
+    else:
+        model_future = key.get_async()
+        model = None
+
     partials = []
 
     for tpl in args:
@@ -54,14 +60,14 @@ def fetch(key, *args):
         cls = query._relation_cls
 
         if key.kind() == cls.origin._kind:
-            query.filter(cls.origin == key)
+            query = query.filter(cls.origin == key)
             destin_keys = [relation.destin for relation in query.fetch()]
             destin_futures = ndb.get_multi_async(destin_keys)
             model = model or model_future.get_result()
             p = partial(cls._set_origin_property, model, name, destin_futures)
 
         else:
-            query.filter(cls.destin == key)
+            query = query.filter(cls.destin == key)
             origin_keys = [relation.origin for relation in query.fetch()]
             origin_futures = ndb.get_multi_async(origin_keys)
             model = model or model_future.get_result()
@@ -76,4 +82,7 @@ def fetch(key, *args):
 
 
 def fetch_mult(query, *args):
-    pass
+    models = query.fetch()
+    for m in models:
+        fetch(m, *args)
+    return models
