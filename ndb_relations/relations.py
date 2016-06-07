@@ -73,3 +73,7 @@ def fetch(key, *args):
         p()
 
     return model or model_future.get_result()
+
+
+def fetch_mult(query, *args):
+    pass
