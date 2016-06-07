@@ -58,20 +58,14 @@ def fetch(key, *args):
     for tpl in args:
         name, query = tpl
         cls = query._relation_cls
-
-        if key.kind() == cls.origin._kind:
-            query = query.filter(cls.origin == key)
-            destin_keys = [relation.destin for relation in query.fetch()]
-            destin_futures = ndb.get_multi_async(destin_keys)
-            model = model or model_future.get_result()
-            p = partial(cls._set_origin_property, model, name, destin_futures)
-
-        else:
-            query = query.filter(cls.destin == key)
-            origin_keys = [relation.origin for relation in query.fetch()]
-            origin_futures = ndb.get_multi_async(origin_keys)
-            model = model or model_future.get_result()
-            p = partial(cls._set_destin_property, model, name, origin_futures)
+        opposite_prop, prop = _define_property_and_opposite(cls, key)
+        query = query.filter(getattr(cls, prop) == key)
+        relation_futures = query.fetch_async()
+        opposite_keys = [getattr(relation, opposite_prop) for relation in relation_futures.get_result()]
+        opposite_futures = ndb.get_multi_async(opposite_keys)
+        model = model or model_future.get_result()
+        method_name = '_set_{}_property'.format(prop)
+        p = partial(getattr(cls, method_name), model, name, opposite_futures)
 
         partials.append(p)
 
@@ -79,6 +73,15 @@ def fetch(key, *args):
         p()
 
     return model or model_future.get_result()
+
+
+def _define_property_and_opposite(cls, key):
+    prop = 'origin'
+    opposite_prop = 'destin'
+    if key.kind() == cls.destin._kind:
+        prop = 'destin'
+        opposite_prop = 'origin'
+    return opposite_prop, prop
 
 
 def fetch_mult(query, *args):
