@@ -206,7 +206,7 @@ More than that, related object can be found in parallel:
 >>> item = Item(name='Notebook') 
 >>> item.put() 
 Key('Item', 12)
->>> item2 = Item(name='Notebook') 
+>>> item2 = Item(name='Tablet') 
 >>> item2.put() 
 Key('Item', 13)
 
@@ -223,6 +223,39 @@ Order2(key=Key('Order2', 8))
 >>> order.owner
 User2(key=Key('User2', 7), name=u'Renzo')
 >>> order.items
-[Item(key=Key('Item', 12), name=u'Notebook'), Item(key=Key('Item', 13), name=u'Notebook')]
+[Item(key=Key('Item', 12), name=u'Notebook'), Item(key=Key('Item', 13), name=u'Tablet')]
+
+```
+
+# It is possible finding several objectd at once:
+
+```python
+
+# Creating more items
+>>> item3 = Item(name='Cellphone') 
+>>> item3.put() 
+Key('Item', 16)
+>>> item4 = Item(name='Printer') 
+>>> item4.put() 
+Key('Item', 17)
+
+#Creting new relationg with order2
+
+>>> OrderItemRelation(origin=order2.key, destin=item3.key).put()
+Key('Relation', 18)
+>>> OrderItemRelation(origin=order2.key, destin=item4.key).put()
+Key('Relation', 19)
+
+# Fetching all orders
+
+>>> from ndb_relations.relations import fetch_mult
+>>> orders = fetch_mult(Order2.query(), ('items', OrderItemRelation.query()))
+>>> orders
+[Order2(key=Key('Order2', 8)), Order2(key=Key('Order2', 9))]
+>>> orders[0].items
+[Item(key=Key('Item', 12), name=u'Notebook'), Item(key=Key('Item', 13), name=u'Tablet')]
+>>> orders[1].items
+[Item(key=Key('Item', 16), name=u'Cellphone'), Item(key=Key('Item', 17), name=u'Printer')]
+
 
 ```
